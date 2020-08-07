@@ -1,7 +1,10 @@
 
 # TIN: Tiny Gin
 
-A light-weight drop-in replacement for Gin framework with essential features
+[![CircleCI](https://circleci.com/gh/ronanj/tin.svg?style=svg)](https://app.circleci.com/pipelines/github/ronanj/tin)
+
+
+A dependency free and light-weight drop-in replacement for Gin framework with essential features
 
 ## Usage
 
