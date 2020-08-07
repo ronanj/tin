@@ -8,17 +8,17 @@ import (
 )
 
 type tinSSEContext struct {
-	*tinContext
+	*Context
 	flusher http.Flusher
 }
 
-func (t *tinContext) SSE() *tinSSEContext {
+func (t *Context) SSE() *tinSSEContext {
 
 	flusher, ok := t.w.(http.Flusher)
 
 	if !ok {
 		http.Error(t.w, "Streaming unsupported!", http.StatusInternalServerError)
-		return &tinSSEContext{tinContext: t}
+		return &tinSSEContext{Context: t}
 	}
 
 	t.w.Header().Set("Content-Type", "text/event-stream")
@@ -27,8 +27,8 @@ func (t *tinContext) SSE() *tinSSEContext {
 	t.w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	return &tinSSEContext{
-		flusher:    flusher,
-		tinContext: t,
+		flusher: flusher,
+		Context: t,
 	}
 }
 
