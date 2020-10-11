@@ -75,3 +75,19 @@ func (t *Tin) POST(path string, handle func(c *Context)) {
 
 	})
 }
+
+func (t *Tin) Any(path string, handle func(c *Context)) {
+
+	path, params := extractPath(path)
+
+	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := &Context{t, w, r, params, false}
+		if r.Method == "POST" {
+			handle(ctx)
+		} else {
+			http.Error(w, "Invalid method", http.StatusInternalServerError)
+		}
+
+	})
+}

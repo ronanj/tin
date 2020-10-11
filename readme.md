@@ -29,7 +29,7 @@ router.GET("/aaa/bbb/:server", func(c *tin.Context) {
 
 router.GET("/aaa/bbb/:server/:name", func(c *tin.Context) {
 	server := c.Param("server")
-	name := c.Param("server")
+	name := c.Param("name")
 }
 ```
 

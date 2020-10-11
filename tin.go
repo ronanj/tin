@@ -13,6 +13,10 @@ func Default() *Tin {
 	return &Tin{}
 }
 
+func New() *Tin {
+	return &Tin{}
+}
+
 func (t *Tin) Run(address string) {
 
 	http.ListenAndServe(address, nil)

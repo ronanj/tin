@@ -14,17 +14,17 @@ type tinSSEContext struct {
 
 func (t *Context) SSE() *tinSSEContext {
 
-	flusher, ok := t.w.(http.Flusher)
+	flusher, ok := t.Writer.(http.Flusher)
 
 	if !ok {
-		http.Error(t.w, "Streaming unsupported!", http.StatusInternalServerError)
+		http.Error(t.Writer, "Streaming unsupported!", http.StatusInternalServerError)
 		return &tinSSEContext{Context: t}
 	}
 
-	t.w.Header().Set("Content-Type", "text/event-stream")
-	t.w.Header().Set("Cache-Control", "no-cache")
-	t.w.Header().Set("Connection", "keep-alive")
-	t.w.Header().Set("Access-Control-Allow-Origin", "*")
+	t.Writer.Header().Set("Content-Type", "text/event-stream")
+	t.Writer.Header().Set("Cache-Control", "no-cache")
+	t.Writer.Header().Set("Connection", "keep-alive")
+	t.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 
 	return &tinSSEContext{
 		flusher: flusher,
@@ -58,12 +58,12 @@ func (t *tinSSEContext) send(event string, v interface{}) error {
 		return err
 	}
 
-	_, err = fmt.Fprintf(t.w, "event: %s\n", event)
+	_, err = fmt.Fprintf(t.Writer, "event: %s\n", event)
 	if err != nil {
 		return err
 	}
 
-	_, err = fmt.Fprintf(t.w, "data: %s\n\n", string(body))
+	_, err = fmt.Fprintf(t.Writer, "data: %s\n\n", string(body))
 	if err != nil {
 		return err
 	}
