@@ -1,10 +1,59 @@
 package tin
 
 import (
-	// "log"
+	"log"
 	"net/http"
+	"regexp"
 	"strings"
 )
+
+type route struct {
+	pattern *regexp.Regexp
+	handler http.Handler
+	method  string
+}
+
+type tinRouter struct {
+	routes []*route
+}
+
+func newTinRouter() *tinRouter {
+	return &tinRouter{
+		routes: make([]*route, 0),
+	}
+}
+
+func (h *tinRouter) add(path string, method string, handler func(http.ResponseWriter, *http.Request)) {
+	pattern, err := regexp.Compile(path)
+	if err != nil {
+		log.Fatal("Invalid path '%s': %w\n", path, err)
+	}
+	h.routes = append(h.routes, &route{pattern, http.HandlerFunc(handler), method})
+}
+
+func (h *tinRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	invalidMethod := false
+	for _, route := range h.routes {
+
+		if route.pattern.MatchString(r.URL.Path) {
+			if r.Method == route.method || route.method == "" {
+				route.handler.ServeHTTP(w, r)
+				return
+			} else {
+				invalidMethod = true
+			}
+		}
+	}
+
+	if invalidMethod {
+		http.Error(w, "Invalid method", http.StatusInternalServerError)
+	}
+
+	http.NotFound(w, r)
+}
+
+/* -------------------------------- */
 
 func extractPath(path string) (string, map[string]int) {
 
@@ -35,7 +84,7 @@ func (t *Tin) GET(path string, handle func(c *Context)) {
 
 	path, params := extractPath(path)
 
-	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+	t.router.add(path, "GET", func(w http.ResponseWriter, r *http.Request) {
 
 		ctx := &Context{t, w, r, params, false}
 		done := make(chan bool, 0)
@@ -51,11 +100,7 @@ func (t *Tin) GET(path string, handle func(c *Context)) {
 			done <- true
 		}()
 
-		if r.Method == "GET" {
-			handle(ctx)
-		} else {
-			http.Error(w, "Invalid method", http.StatusInternalServerError)
-		}
+		handle(ctx)
 
 	})
 }
@@ -64,14 +109,9 @@ func (t *Tin) POST(path string, handle func(c *Context)) {
 
 	path, params := extractPath(path)
 
-	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+	t.router.add(path, "POST", func(w http.ResponseWriter, r *http.Request) {
 
-		ctx := &Context{t, w, r, params, false}
-		if r.Method == "POST" {
-			handle(ctx)
-		} else {
-			http.Error(w, "Invalid method", http.StatusInternalServerError)
-		}
+		handle(&Context{t, w, r, params, false})
 
 	})
 }
@@ -80,14 +120,9 @@ func (t *Tin) Any(path string, handle func(c *Context)) {
 
 	path, params := extractPath(path)
 
-	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+	t.router.add(path, "", func(w http.ResponseWriter, r *http.Request) {
 
-		ctx := &Context{t, w, r, params, false}
-		if r.Method == "POST" {
-			handle(ctx)
-		} else {
-			http.Error(w, "Invalid method", http.StatusInternalServerError)
-		}
+		handle(&Context{t, w, r, params, false})
 
 	})
 }

@@ -40,7 +40,3 @@ router.GET("/aaa/bbb/:server/ccc", func(c *tin.Context) {
 	server := c.Param("server")
 }
 ```
-
-### Single Path method
-
-It is not possible to define a POST and GET at the same time on the same path.

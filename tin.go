@@ -5,6 +5,7 @@ import (
 )
 
 type Tin struct {
+	router *tinRouter
 }
 
 type H = map[string]interface{}
@@ -14,12 +15,12 @@ func Default() *Tin {
 }
 
 func New() *Tin {
-	return &Tin{}
+	return &Tin{router: newTinRouter()}
 }
 
 func (t *Tin) Run(address string) {
 
-	http.ListenAndServe(address, nil)
+	http.ListenAndServe(address, t.router)
 
 }
 
@@ -31,3 +32,5 @@ const (
 
 func SetMode(_ string) {
 }
+
+type HandlerFunc = func(c *Context)
