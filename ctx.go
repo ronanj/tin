@@ -42,9 +42,9 @@ func (t *Context) BindJSON(v interface{}) error {
 func (t *Context) JSON(status int, v interface{}) {
 
 	body, _ := json.Marshal(v)
-	t.Writer.WriteHeader(status)
 	t.Writer.Header().Set("Content-Type", "application/json")
 	t.Writer.Header().Set("Content-Length", fmt.Sprintf("%d", len(body)))
+	t.Writer.WriteHeader(status)
 	t.Writer.Write(body)
 
 }
