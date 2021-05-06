@@ -16,6 +16,20 @@ import (
 )
 ```
 
+## Built-in extensions
+
+### CORS
+
+```
+import (
+    gin "github.com/ronanj/tin"
+)
+
+r := gin.New()
+gin.Use(gin.CORSMiddleware())
+```
+
+
 ## Known limitations
 
 ### Path Matching
