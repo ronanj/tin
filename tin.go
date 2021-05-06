@@ -5,17 +5,28 @@ import (
 )
 
 type Tin struct {
-	router *tinRouter
+	router      *tinRouter
+	middlewares []HandlerFunc
 }
 
 type H = map[string]interface{}
 
 func Default() *Tin {
-	return &Tin{}
+	return &Tin{
+		router:      newTinRouter(),
+		middlewares: make([]HandlerFunc, 0),
+	}
 }
 
 func New() *Tin {
-	return &Tin{router: newTinRouter()}
+	return &Tin{
+		router:      newTinRouter(),
+		middlewares: make([]HandlerFunc, 0),
+	}
+}
+
+func (t *Tin) Use(middleware HandlerFunc) {
+	t.middlewares = append(t.middlewares, middleware)
 }
 
 func (t *Tin) Run(address string) {

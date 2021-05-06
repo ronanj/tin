@@ -9,11 +9,24 @@ import (
 )
 
 type Context struct {
-	t          *Tin
-	Writer     http.ResponseWriter
-	Request    *http.Request
-	params     map[string]int
+	t       *Tin
+	Writer  http.ResponseWriter
+	Request *http.Request
+	params  map[string]int
+
 	clientGone bool
+	isAborted  bool /* Used by the middleware */
+}
+
+func (t *Tin) newContext(w http.ResponseWriter, r *http.Request, params map[string]int) *Context {
+
+	return &Context{
+		t:          t,
+		Writer:     w,
+		Request:    r,
+		params:     params,
+		clientGone: false,
+	}
 }
 
 func (t *Context) BindJSON(v interface{}) error {
@@ -29,7 +42,7 @@ func (t *Context) BindJSON(v interface{}) error {
 func (t *Context) JSON(status int, v interface{}) {
 
 	body, _ := json.Marshal(v)
-	// t.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	t.Writer.WriteHeader(status)
 	t.Writer.Header().Set("Content-Type", "application/json")
 	t.Writer.Header().Set("Content-Length", fmt.Sprintf("%d", len(body)))
 	t.Writer.Write(body)

@@ -26,7 +26,7 @@ func newTinRouter() *tinRouter {
 func (h *tinRouter) add(path string, method string, handler func(http.ResponseWriter, *http.Request)) {
 	pattern, err := regexp.Compile(path)
 	if err != nil {
-		log.Fatal("Invalid path '%s': %w\n", path, err)
+		log.Fatal("Invalid path", path, err)
 	}
 	h.routes = append(h.routes, &route{pattern, http.HandlerFunc(handler), method})
 }
@@ -38,8 +38,9 @@ func (h *tinRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		if route.pattern.MatchString(r.URL.Path) {
 			if r.Method == route.method || route.method == "" {
+
 				route.handler.ServeHTTP(w, r)
-				return
+
 			} else {
 				invalidMethod = true
 			}
@@ -86,7 +87,7 @@ func (t *Tin) GET(path string, handle func(c *Context)) {
 
 	t.router.add(path, "GET", func(w http.ResponseWriter, r *http.Request) {
 
-		ctx := &Context{t, w, r, params, false}
+		ctx := t.newContext(w, r, params)
 		done := make(chan bool, 0)
 		go func() {
 			select {
@@ -97,10 +98,12 @@ func (t *Tin) GET(path string, handle func(c *Context)) {
 		}()
 
 		defer func() {
-			done <- true
+			if !ctx.clientGone {
+				done <- true
+			}
 		}()
 
-		handle(ctx)
+		t.handle(handle, ctx)
 
 	})
 }
@@ -111,7 +114,7 @@ func (t *Tin) POST(path string, handle func(c *Context)) {
 
 	t.router.add(path, "POST", func(w http.ResponseWriter, r *http.Request) {
 
-		handle(&Context{t, w, r, params, false})
+		t.handle(handle, t.newContext(w, r, params))
 
 	})
 }
@@ -122,7 +125,7 @@ func (t *Tin) Any(path string, handle func(c *Context)) {
 
 	t.router.add(path, "", func(w http.ResponseWriter, r *http.Request) {
 
-		handle(&Context{t, w, r, params, false})
+		t.handle(handle, t.newContext(w, r, params))
 
 	})
 }

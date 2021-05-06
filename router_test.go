@@ -61,7 +61,8 @@ func TestRoutingGetParam(t *testing.T) {
 	_, params := extractPath("/aaaa/:bbbb/:cccc")
 
 	req := httptest.NewRequest("GET", "/p1/p2/p3", nil)
-	ctx := &Context{&Tin{}, nil, req, params, false}
+	tin := &Tin{}
+	ctx := tin.newContext(nil, req, params)
 
 	val := ctx.Param("cccc")
 	if val != "p3" {
