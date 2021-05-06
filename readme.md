@@ -29,6 +29,28 @@ r := gin.New()
 gin.Use(gin.CORSMiddleware())
 ```
 
+### SSE (Server Side Events)
+
+```
+import (
+    gin "github.com/ronanj/tin"
+    "time"
+)
+
+r := gin.New()
+
+r.GET("/stream", func(c *gin.Context) {
+    sse := c.SSE()
+    sse.Event("init")
+    for i:=1; i<=n; i++ {
+        if err := sse.Data(gin.H{"counter": i}); err!=nil {
+            break
+        }
+        time.Sleep(time.Second)
+    }
+})
+```
+
 
 ## Known limitations
 
