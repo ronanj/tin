@@ -40,6 +40,7 @@ func (h *tinRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if r.Method == route.method || route.method == "" {
 
 				route.handler.ServeHTTP(w, r)
+				return
 
 			} else {
 				invalidMethod = true
