@@ -120,6 +120,18 @@ func (t *Tin) POST(path string, handle func(c *Context)) {
 	})
 }
 
+
+func (t *Tin) DELETE(path string, handle func(c *Context)) {
+
+	path, params := extractPath(path)
+
+	t.router.add(path, "DELETE", func(w http.ResponseWriter, r *http.Request) {
+
+		t.handle(handle, t.newContext(w, r, params))
+
+	})
+}
+
 func (t *Tin) Any(path string, handle func(c *Context)) {
 
 	path, params := extractPath(path)
