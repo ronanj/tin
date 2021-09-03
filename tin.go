@@ -29,9 +29,9 @@ func (t *Tin) Use(middleware HandlerFunc) {
 	t.middlewares = append(t.middlewares, middleware)
 }
 
-func (t *Tin) Run(address string) {
+func (t *Tin) Run(address string) error {
 
-	http.ListenAndServe(address, t.router)
+	return http.ListenAndServe(address, t.router)
 
 }
 
