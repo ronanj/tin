@@ -5,26 +5,25 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 )
 
 type Context struct {
 	t       *Tin
 	Writer  http.ResponseWriter
 	Request *http.Request
-	params  map[string]int
+	path    *path
 
 	clientGone bool
 	isAborted  bool /* Used by the middleware */
 }
 
-func (t *Tin) newContext(w http.ResponseWriter, r *http.Request, params map[string]int) *Context {
+func (t *Tin) newContext(w http.ResponseWriter, r *http.Request, path *path) *Context {
 
 	return &Context{
 		t:          t,
 		Writer:     w,
 		Request:    r,
-		params:     params,
+		path:       path,
 		clientGone: false,
 	}
 }
@@ -72,11 +71,7 @@ func (t *Context) Header(k, v string) {
 }
 
 func (t *Context) Param(s string) string {
-	if idx, has := t.params[s]; has {
-		url := strings.Split(t.Request.URL.Path, "/")
-		return url[idx]
-	}
-	panic("Invalid parameter")
+	return t.path.param(t.Request.URL.Path, s)
 }
 
 func (t *Context) ClientIP() string {

@@ -56,23 +56,19 @@ r.GET("/stream", func(c *gin.Context) {
 
 ### Path Matching
 
-The router only supports termnial matching. For instance this will work:
-
-```go
-router.GET("/aaa/bbb/:server", func(c *tin.Context) {
-	server := c.Param("server")
-}
-
-router.GET("/aaa/bbb/:server/:name", func(c *tin.Context) {
-	server := c.Param("server")
-	name := c.Param("name")
-}
-```
-
-But this will panic:
+The router support complex matching, but the matches should be added by order of priority. Eg, in the example below, `/aaa/bbb/:server/ccc` must be added before `/aaa/bbb/:server/:name`.
 
 ```go
 router.GET("/aaa/bbb/:server/ccc", func(c *tin.Context) {
+    server := c.Param("server")
+}
+
+router.GET("/aaa/bbb/:server/:name", func(c *tin.Context) {
+    server := c.Param("server")
+    name := c.Param("name")
+}
+
+router.GET("/aaa/bbb/:server", func(c *tin.Context) {
 	server := c.Param("server")
 }
 ```
