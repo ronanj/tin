@@ -53,7 +53,7 @@ func (h *tinRouter) findRoute(url string, method string) (*route, error) {
 	}
 
 	if invalidMethod {
-		return nil, fmt.Errorf("Invalid method")
+		return nil, fmt.Errorf("invalid method")
 	}
 	return nil, nil
 }
@@ -65,7 +65,7 @@ func (t *Tin) GET(url string, handle func(c *Context)) {
 	t.router.add(path, "GET", func(w http.ResponseWriter, r *http.Request) {
 
 		ctx := t.newContext(w, r, path)
-		done := make(chan bool, 0)
+		done := make(chan bool)
 		go func() {
 			select {
 			case <-r.Context().Done():

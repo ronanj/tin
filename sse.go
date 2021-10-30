@@ -54,7 +54,7 @@ func (t *tinSSEContext) Send(event string, v interface{}) error {
 func (t *tinSSEContext) send(event string, v interface{}) error {
 
 	if t.clientGone || t.flusher == nil {
-		return errors.New("Client is gone")
+		return errors.New("client is gone")
 	}
 
 	body, err := json.Marshal(v)
