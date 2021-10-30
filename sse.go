@@ -47,6 +47,10 @@ func (t *tinSSEContext) JSON(v interface{}) error {
 	return t.send("data", v)
 }
 
+func (t *tinSSEContext) Send(event string, v interface{}) error {
+	return t.send(event, v)
+}
+
 func (t *tinSSEContext) send(event string, v interface{}) error {
 
 	if t.clientGone || t.flusher == nil {
@@ -72,4 +76,8 @@ func (t *tinSSEContext) send(event string, v interface{}) error {
 		t.flusher.Flush()
 	}
 	return nil
+}
+
+func (t *tinSSEContext) Gone() <-chan struct{} {
+	return t.Request.Context().Done()
 }
