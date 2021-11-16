@@ -6,10 +6,10 @@ import (
 
 func TestRouting_WrongURLPrefix(t *testing.T) {
 
-	router := newTinRouter()
+	router := newTinRouter(New())
 	router.add(extractPath("/aaa/:bbb"), "GET", nil)
 
-	if route, err := router.findRoute("/v2/aaa/p1", "GET"); err != nil {
+	if route, _, err := router.findRoute("/v2/aaa/p1", "GET"); err != nil {
 		t.Fatalf("Expect no error to be raised")
 
 	} else if route != nil {
@@ -21,10 +21,10 @@ func TestRouting_WrongURLPrefix(t *testing.T) {
 
 func TestRouting_WrongURLSuffix(t *testing.T) {
 
-	router := newTinRouter()
+	router := newTinRouter(New())
 	router.add(extractPath("/aaa/:bbb"), "GET", nil)
 
-	if route, err := router.findRoute("/aaa/p1/alpha", "GET"); err != nil {
+	if route, _, err := router.findRoute("/aaa/p1/alpha", "GET"); err != nil {
 		t.Fatalf("Expect no error to be raised")
 
 	} else if route != nil {
@@ -36,10 +36,10 @@ func TestRouting_WrongURLSuffix(t *testing.T) {
 
 func TestRouting_TrailingSlash(t *testing.T) {
 
-	router := newTinRouter()
+	router := newTinRouter(New())
 	router.add(extractPath("/aaa/:bbb"), "GET", nil)
 
-	if route, err := router.findRoute("/aaa/p1/", "GET"); err != nil {
+	if route, _, err := router.findRoute("/aaa/p1/", "GET"); err != nil {
 		t.Fatalf("Expect no error to be raised")
 
 	} else if route != nil {
@@ -51,10 +51,10 @@ func TestRouting_TrailingSlash(t *testing.T) {
 
 func TestRouting_HeadSlash(t *testing.T) {
 
-	router := newTinRouter()
+	router := newTinRouter(New())
 	router.add(extractPath("/aaa/:bbb"), "GET", nil)
 
-	if route, err := router.findRoute("//aaa/p1/", "GET"); err != nil {
+	if route, _, err := router.findRoute("//aaa/p1/", "GET"); err != nil {
 		t.Fatalf("Expect no error to be raised")
 
 	} else if route != nil {
@@ -66,10 +66,10 @@ func TestRouting_HeadSlash(t *testing.T) {
 
 func TestRouting_WrongMethod(t *testing.T) {
 
-	router := newTinRouter()
+	router := newTinRouter(New())
 	router.add(extractPath("/aaa/:bbb"), "GET", nil)
 
-	if _, err := router.findRoute("/aaa/p1", "DELETE"); err == nil {
+	if _, valid, err := router.findRoute("/aaa/p1", "DELETE"); err != nil || valid {
 		t.Fatalf("Expect error to be raised")
 
 	}
@@ -78,10 +78,10 @@ func TestRouting_WrongMethod(t *testing.T) {
 
 func TestRouting_CorrectURL_WithParams(t *testing.T) {
 
-	router := newTinRouter()
+	router := newTinRouter(New())
 	router.add(extractPath("/aaa/:bbb"), "GET", nil)
 
-	if route, err := router.findRoute("/aaa/p1", "GET"); err != nil {
+	if route, _, err := router.findRoute("/aaa/p1", "GET"); err != nil {
 		t.Fatalf("Expect no error to be raised")
 
 	} else if route == nil {
@@ -96,7 +96,7 @@ func TestRouting_CorrectURL_WithParams(t *testing.T) {
 
 func TestRouting_CorrectURL_WithComplexParams(t *testing.T) {
 
-	router := newTinRouter()
+	router := newTinRouter(New())
 
 	route1 := extractPath("/aaa/bbb/:server/ccc")
 	router.add(route1, "GET", nil)
@@ -107,15 +107,15 @@ func TestRouting_CorrectURL_WithComplexParams(t *testing.T) {
 	route3 := extractPath("/aaa/bbb/:server")
 	router.add(route3, "GET", nil)
 
-	if route, _ := router.findRoute("/aaa/bbb/alpha/ccc", "GET"); route.path != route1 {
+	if route, _, _ := router.findRoute("/aaa/bbb/alpha/ccc", "GET"); route.path != route1 {
 		t.Fatalf("Expect to get route1")
 	}
 
-	if route, _ := router.findRoute("/aaa/bbb/alpha/other", "GET"); route.path != route2 {
+	if route, _, _ := router.findRoute("/aaa/bbb/alpha/other", "GET"); route.path != route2 {
 		t.Fatalf("Expect to get route2")
 	}
 
-	if route, _ := router.findRoute("/aaa/bbb/beta", "GET"); route.path != route3 {
+	if route, _, _ := router.findRoute("/aaa/bbb/beta", "GET"); route.path != route3 {
 		t.Fatalf("Expect to get route3")
 	}
 }

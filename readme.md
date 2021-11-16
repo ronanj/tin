@@ -20,7 +20,7 @@ import (
 
 ### CORS
 
-```go
+```
 import (
     gin "github.com/ronanj/tin"
 )
@@ -31,7 +31,7 @@ gin.Use(gin.CORSMiddleware())
 
 ### SSE (Server Side Events)
 
-```go
+```
 import (
     gin "github.com/ronanj/tin"
     "time"

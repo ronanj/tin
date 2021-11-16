@@ -11,7 +11,7 @@ func TestJSON(t *testing.T) {
 	tin := New()
 	req := httptest.NewRequest("GET", "/path", nil)
 	w := httptest.NewRecorder()
-	ctx := tin.newContext(w, req, nil)
+	ctx := newContext(w, req, nil)
 
 	tin.handle(func(c *Context) {
 		c.JSON(404, H{"status": "error"})
@@ -42,7 +42,7 @@ func TestCustomHeader(t *testing.T) {
 	tin := New()
 	req := httptest.NewRequest("GET", "/path", nil)
 	w := httptest.NewRecorder()
-	ctx := tin.newContext(w, req, nil)
+	ctx := newContext(w, req, nil)
 
 	tin.handle(func(c *Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")

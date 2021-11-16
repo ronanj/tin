@@ -1,74 +1,81 @@
 package tin
 
 import (
-	"fmt"
 	"net/http"
 )
 
 type route struct {
 	path    *path
-	handler http.Handler
+	handler func(ctx *Context)
 	method  string
 }
 
 type tinRouter struct {
+	tin    *Tin
 	routes []*route
 }
 
-func newTinRouter() *tinRouter {
-	return &tinRouter{
-		routes: make([]*route, 0),
-	}
+func newTinRouter(t *Tin) *tinRouter {
+	return &tinRouter{t, make([]*route, 0)}
 }
 
-func (h *tinRouter) add(path *path, method string, handler func(http.ResponseWriter, *http.Request)) {
-	h.routes = append(h.routes, &route{path, http.HandlerFunc(handler), method})
+func (h *tinRouter) add(path *path, method string, handler func(ctx *Context)) {
+	h.routes = append(h.routes, &route{path, handler, method})
 }
 
 func (h *tinRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	if route, err := h.findRoute(r.URL.Path, r.Method); err != nil {
+	route, validMethod, err := h.findRoute(r.URL.Path, r.Method)
+
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else if route == nil {
+		return
+	}
+
+	var path *path
+	if route != nil {
+		path = route.path
+	}
+
+	ctx := newContext(w, r, path)
+	if !h.tin.applyMiddleware(ctx) {
+		return
+	}
+
+	if route == nil {
 		http.NotFound(w, r)
+	} else if validMethod {
+		route.handler(ctx)
 	} else {
-		route.handler.ServeHTTP(w, r)
+		http.Error(w, "Invalid Method", http.StatusMethodNotAllowed)
 	}
 
 }
 
 /* -------------------------------- */
 
-func (h *tinRouter) findRoute(url string, method string) (*route, error) {
+func (h *tinRouter) findRoute(url string, method string) (*route, bool, error) {
 
-	invalidMethod := false
 	for _, route := range h.routes {
 		if route.path.match(url) {
-			if method == route.method || route.method == "" {
-				return route, nil
-			} else {
-				invalidMethod = true
-			}
+			validMethod := method == route.method || route.method == ""
+			return route, validMethod, nil
 		}
 	}
 
-	if invalidMethod {
-		return nil, fmt.Errorf("invalid method")
-	}
-	return nil, nil
+	return nil, false, nil
 }
 
-func (t *Tin) GET(url string, handle func(c *Context)) {
+func (t *Tin) GET(url string, handler func(c *Context)) {
 
 	path := extractPath(url)
 
-	t.router.add(path, "GET", func(w http.ResponseWriter, r *http.Request) {
+	t.router.add(path, "GET", func(ctx *Context) {
 
-		ctx := t.newContext(w, r, path)
 		done := make(chan bool)
 		go func() {
 			select {
-			case <-r.Context().Done():
+			case <-ctx.Request.Context().Done():
 				ctx.clientGone = true
 			case <-done:
 			}
@@ -80,40 +87,27 @@ func (t *Tin) GET(url string, handle func(c *Context)) {
 			}
 		}()
 
-		t.handle(handle, ctx)
+		handler(ctx)
 
 	})
 }
 
-func (t *Tin) POST(url string, handle func(c *Context)) {
+func (t *Tin) POST(url string, handler func(c *Context)) {
 
 	path := extractPath(url)
-
-	t.router.add(path, "POST", func(w http.ResponseWriter, r *http.Request) {
-
-		t.handle(handle, t.newContext(w, r, path))
-
-	})
+	t.router.add(path, "POST", handler)
 }
 
-func (t *Tin) DELETE(url string, handle func(c *Context)) {
+func (t *Tin) DELETE(url string, handler func(c *Context)) {
 
 	path := extractPath(url)
+	t.router.add(path, "DELETE", handler)
 
-	t.router.add(path, "DELETE", func(w http.ResponseWriter, r *http.Request) {
-
-		t.handle(handle, t.newContext(w, r, path))
-
-	})
 }
 
-func (t *Tin) Any(url string, handle func(c *Context)) {
+func (t *Tin) Any(url string, handler func(c *Context)) {
 
 	path := extractPath(url)
+	t.router.add(path, "", handler)
 
-	t.router.add(path, "", func(w http.ResponseWriter, r *http.Request) {
-
-		t.handle(handle, t.newContext(w, r, path))
-
-	})
 }

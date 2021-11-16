@@ -12,21 +12,14 @@ type Tin struct {
 type H = map[string]interface{}
 
 func Default() *Tin {
-	return &Tin{
-		router:      newTinRouter(),
-		middlewares: make([]HandlerFunc, 0),
-	}
+	t := &Tin{}
+	t.router = newTinRouter(t)
+	t.middlewares = make([]HandlerFunc, 0)
+	return t
 }
 
 func New() *Tin {
-	return &Tin{
-		router:      newTinRouter(),
-		middlewares: make([]HandlerFunc, 0),
-	}
-}
-
-func (t *Tin) Use(middleware HandlerFunc) {
-	t.middlewares = append(t.middlewares, middleware)
+	return Default()
 }
 
 func (t *Tin) Run(address string) error {

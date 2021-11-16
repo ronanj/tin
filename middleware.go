@@ -1,14 +1,5 @@
 package tin
 
-/*
-
-https://stackoverflow.com/questions/29418478/go-gin-framework-cors
-
-router = gin.New()
-router.Use(CORSMiddleware())
-
-*/
-
 func CORSMiddleware() HandlerFunc {
 	return func(c *Context) {
 
@@ -26,6 +17,10 @@ func CORSMiddleware() HandlerFunc {
 	}
 }
 
+func (t *Tin) Use(middleware HandlerFunc) {
+	t.middlewares = append(t.middlewares, middleware)
+}
+
 /* Allow only one middleware to start with */
 
 func (C *Context) Next() {
@@ -37,14 +32,18 @@ func (c *Context) AbortWithStatus(status int) {
 	c.isAborted = true
 }
 
-func (t *Tin) handle(handle func(c *Context), ctx *Context) {
+func (t *Tin) applyMiddleware(ctx *Context) bool {
 
 	for _, mw := range t.middlewares {
 		mw(ctx)
 		if ctx.isAborted {
-			return
+			return false
 		}
 	}
+	return true
+}
+
+func (t *Tin) handle(handle func(c *Context), ctx *Context) {
 
 	handle(ctx)
 

@@ -3,59 +3,61 @@ package tin
 import (
 	"io/ioutil"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
-func TestNoAbort(t *testing.T) {
+func TestValidMethod(t *testing.T) {
 
 	tin := New()
 	tin.Use(CORSMiddleware())
 
-	req := httptest.NewRequest("GET", "/path", nil)
-	w := httptest.NewRecorder()
-	ctx := tin.newContext(w, req, nil)
-
 	called := false
-	tin.handle(func(c *Context) {
+	tin.GET("/path", func(c *Context) {
 		c.JSON(200, H{"status": "ok"})
 		called = true
-	}, ctx)
+	})
+
+	r := httptest.NewRequest("GET", "/path", nil)
+	w := httptest.NewRecorder()
+	tin.router.ServeHTTP(w, r)
 
 	if !called {
-		t.Fatal("Handler should be called")
+		t.Error("Handler should be called")
 	}
 
 	res := w.Result()
 	if res.Status != "200 OK" {
-		t.Fatalf("Expect context to be aborted: %s!=200", res.Status)
+		t.Errorf("Expect context to be aborted: %s!=200", res.Status)
 	}
 	if res.Header.Get("Access-Control-Allow-Origin") != "*" {
-		t.Fatal("CORS not set")
+		t.Error("CORS not set")
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		t.Fatal("Could not ready the body")
+		t.Error("Could not ready the body")
 	}
 	if string(body) != `{"status":"ok"}` {
-		t.Fatal("Invalid response", string(body))
+		t.Error("Invalid response", string(body))
 	}
 }
 
-func TestAbort(t *testing.T) {
+func TestOptions(t *testing.T) {
 
 	tin := New()
 	tin.Use(CORSMiddleware())
 
-	req := httptest.NewRequest("OPTIONS", "/path", nil)
-	w := httptest.NewRecorder()
-	ctx := tin.newContext(w, req, nil)
-
 	called := false
-	tin.handle(func(c *Context) {
+	tin.GET("/path", func(c *Context) {
+		c.JSON(200, H{"status": "ok"})
 		called = true
-	}, ctx)
+	})
+
+	r := httptest.NewRequest("OPTIONS", "/path", nil)
+	w := httptest.NewRecorder()
+	tin.router.ServeHTTP(w, r)
 
 	if called {
 		t.Fatal("Handler should not be called")
@@ -81,19 +83,49 @@ func TestAbort(t *testing.T) {
 
 }
 
-func Test404(t *testing.T) {
+func TestInvalidMethod(t *testing.T) {
 
 	tin := New()
 	tin.Use(CORSMiddleware())
 
-	req := httptest.NewRequest("GET", "/path", nil)
-	w := httptest.NewRecorder()
-	ctx := tin.newContext(w, req, nil)
+	called := false
+	tin.GET("/path", func(c *Context) {
+		c.JSON(200, H{"status": "ok"})
+		called = true
+	})
 
-	tin.handle(func(c *Context) {
+	r := httptest.NewRequest("POST", "/path", nil)
+	w := httptest.NewRecorder()
+	tin.router.ServeHTTP(w, r)
+
+	if called {
+		t.Fatal("Handler should not be called")
+	}
+
+	res := w.Result()
+	if res.Status != "405 Method Not Allowed" {
+		t.Fatalf("Expect context to be aborted: %s!=405", res.Status)
+	}
+
+	if res.Header.Get("Access-Control-Allow-Origin") != "*" {
+		t.Fatal("CORS not set")
+	}
+
+}
+
+func TestMethodReturns404(t *testing.T) {
+
+	tin := New()
+	tin.Use(CORSMiddleware())
+
+	tin.GET("/path", func(c *Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.JSON(404, H{"status": "error"})
-	}, ctx)
+	})
+
+	r := httptest.NewRequest("GET", "/path", nil)
+	w := httptest.NewRecorder()
+	tin.router.ServeHTTP(w, r)
 
 	res := w.Result()
 	if res.Status != "404 Not Found" {
@@ -110,6 +142,37 @@ func Test404(t *testing.T) {
 	}
 	if string(body) != `{"status":"error"}` {
 		t.Fatal("Invalid response", string(body))
+	}
+
+}
+
+func TestInvalidRoute(t *testing.T) {
+
+	tin := New()
+	tin.Use(CORSMiddleware())
+
+	tin.GET("/path", func(c *Context) {
+	})
+
+	r := httptest.NewRequest("GET", "/nope", nil)
+	w := httptest.NewRecorder()
+	tin.router.ServeHTTP(w, r)
+
+	res := w.Result()
+	if res.Status != "404 Not Found" {
+		t.Fatalf("Expect context to be aborted: %s!=404", res.Status)
+	}
+	if res.Header.Get("Access-Control-Allow-Origin") != "*" {
+		t.Fatal("CORS should be set even for invalid path")
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		t.Fatal("Could not ready the body")
+	}
+	if !strings.HasPrefix(string(body), `404`) {
+		t.Fatalf("Invalid response '%s'", string(body))
 	}
 
 }

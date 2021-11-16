@@ -61,8 +61,7 @@ func TestPathGetParam(t *testing.T) {
 	params := extractPath("/aaaa/:bbbb/:cccc")
 
 	req := httptest.NewRequest("GET", "/p1/p2/p3", nil)
-	tin := &Tin{}
-	ctx := tin.newContext(nil, req, params)
+	ctx := newContext(nil, req, params)
 
 	val := ctx.Param("cccc")
 	if val != "p3" {

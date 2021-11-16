@@ -8,7 +8,6 @@ import (
 )
 
 type Context struct {
-	t       *Tin
 	Writer  http.ResponseWriter
 	Request *http.Request
 	path    *path
@@ -17,10 +16,9 @@ type Context struct {
 	isAborted  bool /* Used by the middleware */
 }
 
-func (t *Tin) newContext(w http.ResponseWriter, r *http.Request, path *path) *Context {
+func newContext(w http.ResponseWriter, r *http.Request, path *path) *Context {
 
 	return &Context{
-		t:          t,
 		Writer:     w,
 		Request:    r,
 		path:       path,
