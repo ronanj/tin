@@ -1,6 +1,6 @@
 package tin
 
-import (
+import (,
 	"net/http"
 	"strings"
 )
@@ -14,7 +14,10 @@ func (t *Tin) StaticFS(relativePath string, fs http.FileSystem) {
 		panic("URL parameters can not be used when serving a static folder")
 	}
 	handler := t.createStaticHandler(relativePath, fs)
-	t.GET(relativePath, handler)
+	// Since the router matches strict path, make sure
+	// to add the ".*" wildcard to match any file 
+	// within the relative path
+	t.GET(relativePath+".*", handler)
 }
 
 func (t *Tin) createStaticHandler(relativePath string, fs http.FileSystem) HandlerFunc {
