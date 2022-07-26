@@ -1,6 +1,6 @@
 package tin
 
-import (,
+import (
 	"net/http"
 	"strings"
 )
