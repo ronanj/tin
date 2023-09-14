@@ -2,6 +2,7 @@ package tin
 
 import (
 	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -159,7 +160,7 @@ func TestInvalidRoute(t *testing.T) {
 	tin.router.ServeHTTP(w, r)
 
 	res := w.Result()
-	if res.Status != "404 Not Found" {
+	if res.Status != "404 "+http.StatusText(http.StatusNotFound) {
 		t.Fatalf("Expect context to be aborted: %s!=404", res.Status)
 	}
 	if res.Header.Get("Access-Control-Allow-Origin") != "*" {

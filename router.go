@@ -38,6 +38,12 @@ func (h *tinRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := newContext(w, r, path)
+	defer func() {
+		if err := recover(); err != nil {
+			ctx.recovery(err, true)
+		}
+	}()
+
 	if !h.tin.applyMiddleware(ctx) {
 		return
 	}

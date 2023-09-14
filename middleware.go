@@ -1,5 +1,10 @@
 package tin
 
+func Recovery() HandlerFunc {
+	return func(c *Context) {
+	}
+}
+
 func CORSMiddleware() HandlerFunc {
 	return func(c *Context) {
 
