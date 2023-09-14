@@ -12,8 +12,9 @@ type Context struct {
 	Request *http.Request
 	path    *path
 
-	clientGone bool
-	isAborted  bool /* Used by the middleware */
+	headerWritten bool
+	clientGone    bool
+	isAborted     bool /* Used by the middleware */
 }
 
 func newContext(w http.ResponseWriter, r *http.Request, path *path) *Context {
@@ -43,6 +44,7 @@ func (t *Context) JSON(status int, v interface{}) {
 	t.Writer.Header().Set("Content-Length", fmt.Sprintf("%d", len(body)))
 	t.Writer.WriteHeader(status)
 	t.Writer.Write(body)
+	t.headerWritten = true
 
 }
 
@@ -54,6 +56,10 @@ func (t *Context) String(status int, v string) {
 }
 func (t *Context) Error(err error) {
 	t.JSON(http.StatusOK, H{"status": "error", "reason": err.Error()})
+}
+
+func (c *Context) Abort() {
+	c.isAborted = true
 }
 
 func (t *Context) Query(v string) string {
@@ -74,4 +80,43 @@ func (t *Context) Param(s string) string {
 
 func (t *Context) ClientIP() string {
 	return t.Request.RemoteAddr
+}
+
+func (t *Context) PostForm(s string) string {
+	return t.Request.FormValue(s)
+}
+
+func (c *Context) AbortWithError(code int, err error) {
+	c.AbortWithStatus(code)
+	c.Error(err)
+	c.headerWritten = true
+}
+
+// DefaultQuery returns the keyed url query value if it exists,
+// otherwise it returns the specified defaultValue string.
+// See: Query() and GetQuery() for further information.
+//
+//	GET /?name=Manu&lastname=
+//	c.DefaultQuery("name", "unknown") == "Manu"
+//	c.DefaultQuery("id", "none") == "none"
+//	c.DefaultQuery("lastname", "none") == ""
+func (c *Context) DefaultQuery(key, defaultValue string) string {
+	if value, ok := c.Request.URL.Query()[key]; ok {
+		return value[0]
+	}
+	return defaultValue
+}
+
+// Redirect returns a HTTP redirect to the specific location.
+func (c *Context) Redirect(code int, location string) {
+	http.Redirect(c.Writer, c.Request, location, code)
+	c.headerWritten = true
+}
+
+// Data writes some data into the body stream and updates the HTTP code.
+func (c *Context) Data(code int, contentType string, data []byte) {
+	c.Writer.WriteHeader(code)
+	c.Writer.Header().Set("Content-Type", contentType)
+	c.Writer.Write(data)
+	c.headerWritten = true
 }
