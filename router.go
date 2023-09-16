@@ -38,14 +38,21 @@ func (h *tinRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := newContext(w, r, path)
-	defer func() {
-		if err := recover(); err != nil {
-			ctx.recovery(err, true)
-		}
-	}()
-
 	if !h.tin.applyMiddleware(ctx) {
 		return
+	}
+
+	if ctx.activateRecovery {
+		defer func() {
+			if err := recover(); err != nil {
+				if ctx.recoveryNotifier != nil {
+					ctx.recovery(err, !ctx.recoveryNotifier(err))
+
+				} else {
+					ctx.recovery(err, true)
+				}
+			}
+		}()
 	}
 
 	if route == nil {

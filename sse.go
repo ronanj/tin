@@ -67,6 +67,8 @@ func (t *SSEContext) send(event string, v interface{}) error {
 		return err
 	}
 
+	t.Context.headerWritten = true
+
 	_, err = fmt.Fprintf(t.Writer, "data: %s\n\n", string(body))
 	if err != nil {
 		return err

@@ -1,7 +1,17 @@
 package tin
 
 func Recovery() HandlerFunc {
-	return func(c *Context) {
+	return func(ctx *Context) {
+		ctx.activateRecovery = true
+	}
+}
+
+func RecoveryWithNotification(notifier func(e interface{}) bool) HandlerFunc {
+	return func(ctx *Context) {
+		defer func() {
+			ctx.activateRecovery = true
+			ctx.recoveryNotifier = notifier
+		}()
 	}
 }
 
@@ -27,7 +37,6 @@ func (t *Tin) Use(middleware HandlerFunc) {
 }
 
 /* Allow only one middleware to start with */
-
 func (C *Context) Next() {
 
 }

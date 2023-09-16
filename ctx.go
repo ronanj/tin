@@ -12,9 +12,11 @@ type Context struct {
 	Request *http.Request
 	path    *path
 
-	headerWritten bool
-	clientGone    bool
-	isAborted     bool /* Used by the middleware */
+	headerWritten    bool
+	clientGone       bool
+	isAborted        bool /* Used by the middleware */
+	activateRecovery bool
+	recoveryNotifier func(interface{}) bool
 }
 
 func newContext(w http.ResponseWriter, r *http.Request, path *path) *Context {
