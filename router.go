@@ -46,7 +46,7 @@ func (h *tinRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
 				if ctx.recoveryNotifier != nil {
-					ctx.recovery(err, !ctx.recoveryNotifier(err))
+					ctx.recovery(err, !ctx.recoveryNotifier(ctx, err))
 
 				} else {
 					ctx.recovery(err, true)

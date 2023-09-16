@@ -6,7 +6,7 @@ func Recovery() HandlerFunc {
 	}
 }
 
-func RecoveryWithNotification(notifier func(e interface{}) bool) HandlerFunc {
+func RecoveryWithNotification(notifier func(ctx *Context, e interface{}) bool) HandlerFunc {
 	return func(ctx *Context) {
 		defer func() {
 			ctx.activateRecovery = true

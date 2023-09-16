@@ -158,7 +158,11 @@ func TestRecoveryHandlerWithNotification(t *testing.T) {
 
 	notifierCalled := false
 	tin := New()
-	tin.Use(RecoveryWithNotification(func(e interface{}) bool {
+	tin.Use(RecoveryWithNotification(func(c *Context, e interface{}) bool {
+		if c.Request.URL.Path != "/path" {
+			t.Fatalf("Invalid context path")
+
+		}
 		notifierCalled = true
 		return true
 	}))
