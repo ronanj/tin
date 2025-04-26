@@ -42,11 +42,13 @@ r.GET("/stream", func(c *gin.Context) {
     sse := c.SSE()
     sse.Event("init")
     for i:=1; i<=n; i++ {
-        if err := sse.Data(gin.H{"counter": i}); err!=nil {
+        if err := sse.JSON(gin.H{"counter": i}); err!=nil {
+            // The client is gone, so just abort?
             break
         }
         time.Sleep(time.Second)
     }
+    sse.Event("done")
 })
 ```
 
