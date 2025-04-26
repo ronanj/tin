@@ -1,8 +1,7 @@
 
 # TIN: Tiny Gin
 
-[![CircleCI](https://circleci.com/gh/ronanj/tin.svg?style=svg)](https://app.circleci.com/pipelines/github/ronanj/tin)
-
+[![Go Audit](https://github.com/ronanj/tin/actions/workflows/audit.yml/badge.svg)](https://github.com/ronanj/tin/actions/workflows/audit.yml)
 
 A dependency free and light-weight drop-in replacement for Gin framework with essential features
 
