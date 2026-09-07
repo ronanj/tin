@@ -51,6 +51,22 @@ r.GET("/stream", func(c *gin.Context) {
     sse.Event("done")
 })
 ```
+### Shutdown
+
+```go
+import (
+    gin "github.com/ronanj/tin"
+)
+
+r := gin.New()
+
+go r.Run(":8080") // This is a blocking call
+
+...
+
+r.Shutdown(context.Background())
+```
+
 
 
 ## Known limitations
