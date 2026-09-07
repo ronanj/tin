@@ -1,12 +1,16 @@
 package tin
 
 import (
+	"context"
+	"net"
 	"net/http"
+	"strings"
 )
 
 type Tin struct {
 	router      *tinRouter
 	middlewares []HandlerFunc
+	server      http.Server
 }
 
 type H = map[string]interface{}
@@ -24,8 +28,28 @@ func New() *Tin {
 
 func (t *Tin) Run(address string) error {
 
-	return http.ListenAndServe(address, t.router)
+	t.server = http.Server{
+		Addr:    address,
+		Handler: t.router,
+	}
 
+	var err error
+	var listener net.Listener
+	if strings.HasPrefix(address, "unix:") {
+		listener, err = net.Listen("unix", address[5:])
+	} else {
+		listener, err = net.Listen("tcp", address)
+	}
+	if err != nil {
+		return err
+	}
+
+	return t.server.Serve(listener)
+
+}
+
+func (t *Tin) Shutdown(ctx context.Context) error {
+	return t.server.Shutdown(ctx)
 }
 
 const (
